@@ -73,7 +73,7 @@ router.post(
   ]),
   async (req, res) => {
     const { email, password } = req.body;
-
+    console.log(email, password);
     try {
       // Check if the user exists
       let user = await User.findOne({ email });
@@ -102,7 +102,7 @@ router.post(
       jwt.sign(
         payload,
         process.env.JWT_SECRET,
-        { expiresIn: '1h' }, // Token expires in 1 hour
+        { expiresIn: '120d' }, // Token expires in 1 hour
         (err, token) => {
           if (err) throw err;
           res.json({ token });
