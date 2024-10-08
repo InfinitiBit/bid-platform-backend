@@ -1,0 +1,17 @@
+{
+  "name": "bid-platform",
+  "version": "1.0.0",
+  "description": "Backend API for Bid Platform",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --config webpack.config.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
