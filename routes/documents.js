@@ -19,8 +19,8 @@ const openai = new OpenAI({
 // @access  Private (Bid Creator and Admin)
 router.post(
   '/',
-  // auth,
-  // role(['Admin', 'Bid Creator']),
+  auth,
+  role(['Admin', 'Bid Creator']),
   validate([
     body('projectName', 'Project name is required').notEmpty(),
     body('projectDetails', 'Project details are required').notEmpty(),
