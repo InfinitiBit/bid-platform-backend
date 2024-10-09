@@ -139,7 +139,7 @@ Project Details: ${projectDetails}`,
       const folderName = `${projectName}-${newDocument._id}`;
       console.log(`Creating folder in SharePoint: ${folderName}`);
 
-      const folderCreationUrl = `https://graph.microsoft.com/v1.0/sites/${SHAREPOINT_SITE_ID}/drive/root/children`;
+      const folderCreationUrl = `https://graph.microsoft.com/v1.0/sites/${SHAREPOINT_SITE_ID}/drive/root:/SharePointTest:/children`;
 
       try {
         const folderResponse = await axios.post(
@@ -175,7 +175,7 @@ Project Details: ${projectDetails}`,
       console.log(`Uploading file to SharePoint: ${fileName}`);
 
       // Upload URL
-      const uploadUrl = `https://graph.microsoft.com/v1.0/sites/${SHAREPOINT_SITE_ID}/drive/root:/${folderName}/${fileName}:/content`;
+      const uploadUrl = `https://graph.microsoft.com/v1.0/sites/${SHAREPOINT_SITE_ID}/drive/root:/SharePointTest/${folderName}/${fileName}:/content`;
 
       try {
         await axios.put(uploadUrl, fileContent, {
