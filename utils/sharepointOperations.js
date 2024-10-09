@@ -5,6 +5,7 @@ const SHAREPOINT_SITE_ID = process.env.SHAREPOINT_SITE_ID;
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN; // Ensure this is securely stored and refreshed as needed
 
 // Function to validate the access token format
+
 function isValidJWT(token) {
   return token && token.split('.').length === 3;
 }
@@ -19,6 +20,7 @@ async function createSharePointFolder(folderName) {
 
   try {
     await axios.post(
+
       folderCreationUrl,
       {
         name: folderName,
@@ -52,6 +54,7 @@ async function uploadFileToSharePoint(folderName, fileName, fileContent) {
 
   try {
     await axios.put(uploadUrl, fileContent, {
+
       headers: {
         Authorization: `Bearer ${ACCESS_TOKEN}`,
         'Content-Type': 'application/json',

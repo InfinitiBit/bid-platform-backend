@@ -8,6 +8,7 @@ const auth = require('../middleware/auth');
 const role = require('../middleware/role');
 const validate = require('../middleware/validation');
 const Document = require('../models/Document');
+
 const {
   createSharePointFolder,
   uploadFileToSharePoint,
@@ -66,6 +67,7 @@ router.post(
       await uploadFileToSharePoint(folderName, fileName, fileContent);
 
       // Update the document with version info and save to MongoDB
+
       newDocument.versions.push({
         versionId: fileName,
         versionNumber: 1,

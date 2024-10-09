@@ -71,6 +71,7 @@ Project Details: ${projectDetails}`,
     !summaryData.sections ||
     !Array.isArray(summaryData.sections)
   ) {
+
     console.error('Invalid response format from OpenAI for summary.');
     throw new Error('Invalid response format from OpenAI for summary.');
   }
@@ -84,6 +85,7 @@ async function generateSectionContents(
   projectDetails,
   sections
 ) {
+
   const sectionContents = {};
   for (const section of sections) {
     console.log(`Generating content for section: ${section}`);
