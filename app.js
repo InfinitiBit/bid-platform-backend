@@ -30,6 +30,7 @@ app.use('/api/protected', require('./routes/protected'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/documents', require('./routes/documents'));
 app.use('/api/docTest', require('./routes/docTest'));
+// app.use('/api/testSharePoint', require('./testSharePoint'));
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
