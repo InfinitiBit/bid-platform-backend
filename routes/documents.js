@@ -11,6 +11,7 @@ const Document = require('../models/Document');
 const {
   createSharePointFolder,
   uploadFileToSharePoint,
+  getFileFromSharePoint,
 } = require('../utils/sharepointOperations');
 const {
   generateDocumentContent,
@@ -54,7 +55,7 @@ router.post(
       });
 
       // Create a folder in SharePoint
-      const folderName = `${projectName}-${newDocument._id}`;
+      const folderName = `${newDocument._id}`;
       console.log(`Creating folder in SharePoint: ${folderName}`);
       await createSharePointFolder(folderName);
 
@@ -87,21 +88,33 @@ router.post(
   }
 );
 
-// New route for updating a specific section
+// Updated route for updating a specific section
 router.post('/update-section', async (req, res) => {
   console.log('Updating section...');
   try {
-    const { projectId, sectionName, currentContent, updateInstructions } =
-      req.body;
+    const { documentId, sectionName, updateInstructions } = req.body;
 
-    // Fetch the document from the database
-    const document = await Document.findById(projectId);
+    // Fetch the document from MongoDB
+    const document = await Document.findById(documentId);
     if (!document) {
       return res.status(404).json({ message: 'Document not found' });
     }
 
-    console.log('Document found XXX:', document);
+    console.log('Document found:', document);
+
+    // Get the latest version of the document
+    const latestVersion = document.versions[document.versions.length - 1];
+
+    // Fetch the document content from SharePoint
+    const folderName = `${document._id}`;
+    const fileName = latestVersion.versionId;
+    const fileContent = await getFileFromSharePoint(folderName, fileName);
+
+    // Parse the content
+    const documentContent = JSON.parse(fileContent);
+
     // Update the section content
+    const currentContent = documentContent.sections[sectionName];
     const updatedContent = await updateSectionContent(
       sectionName,
       currentContent,
@@ -109,28 +122,31 @@ router.post('/update-section', async (req, res) => {
     );
 
     // Update the document content
-    document.content.sections[sectionName] = updatedContent;
+    documentContent.sections[sectionName] = updatedContent;
 
-    // Save the updated document to the database
-    await document.save();
+    // Create a new version
+    const newVersionNumber = latestVersion.versionNumber + 1;
+    const newVersionId = `version-${newVersionNumber}.json`;
 
     // Upload the updated document to SharePoint
-    const fileName = `${document.projectName}.docx`;
-    const fileContent = JSON.stringify(document.content);
-    const uploadResult = await uploadToSharePoint(fileName, fileContent);
+    const newFileContent = JSON.stringify(documentContent, null, 2);
+    await uploadFileToSharePoint(folderName, newVersionId, newFileContent);
 
-    // Get the latest version number
-    const latestVersion = await getLatestVersion(fileName);
-
-    // Update the document metadata
-    document.version = latestVersion;
+    // Update the document in MongoDB
+    const newVersion = {
+      versionId: newVersionId,
+      versionNumber: newVersionNumber,
+      content: documentContent,
+      lastModified: new Date(),
+    };
+    document.versions.push(newVersion);
     document.lastModified = new Date();
     await document.save();
 
     res.json({
       message: 'Section updated successfully',
       updatedContent,
-      version: latestVersion,
+      version: newVersionNumber,
     });
   } catch (error) {
     console.error('Error updating section:', error);

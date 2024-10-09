@@ -154,6 +154,34 @@ async function getLatestVersion(fileName) {
   }
 }
 
+// Function to get a file from SharePoint
+async function getFileFromSharePoint(folderName, fileName) {
+  if (!isValidJWT(ACCESS_TOKEN)) {
+    throw new Error('Invalid access token format');
+  }
+
+  console.log('folderName:', folderName);
+  console.log('fileName:', fileName);
+
+  const fileUrl = `https://graph.microsoft.com/v1.0/sites/${SHAREPOINT_SITE_ID}/drive/root:/SharePointTest/${folderName}/${fileName}:/content`;
+
+  try {
+    const response = await axios.get(fileUrl, {
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
+      responseType: 'text',
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      'Error getting file from SharePoint:',
+      error.response ? error.response.data : error.message
+    );
+    throw new Error('Error getting file from SharePoint');
+  }
+}
+
 module.exports = {
   createSharePointFolder,
   uploadFileToSharePoint,
@@ -161,4 +189,5 @@ module.exports = {
   deleteFileOrFolder,
   updateFile,
   getLatestVersion,
+  getFileFromSharePoint,
 };
