@@ -6,6 +6,38 @@ const openai = new OpenAI({
 });
 
 async function generateDocumentContent(projectName, projectDetails) {
+  console.log('Generating document content for project:', projectName);
+
+  // Step 1: Get project summary and sections
+  const summaryData = await getProjectSummaryAndSections(
+    projectName,
+    projectDetails
+  );
+
+  // Step 2: Generate content for each section
+  const sectionContents = await generateSectionContents(
+    projectName,
+    summaryData.summary,
+    projectDetails,
+    summaryData.sections
+  );
+
+  // Step 3: Aggregate all sections into a JSON object
+  const documentContent = {
+    projectName,
+    summary: summaryData.summary,
+    sections: sectionContents,
+  };
+
+  console.log(
+    'Generated document content:',
+    JSON.stringify(documentContent, null, 2)
+  );
+
+  return documentContent;
+}
+
+async function getProjectSummaryAndSections(projectName, projectDetails) {
   console.log('Calling OpenAI API for project summary and sections...');
   const summaryResponse = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
@@ -34,14 +66,26 @@ Project Details: ${projectDetails}`,
     throw new Error('Error parsing OpenAI response for summary.');
   }
 
-  const { summary, sections } = summaryData;
+  if (
+    !summaryData.summary ||
+    !summaryData.sections ||
+    !Array.isArray(summaryData.sections)
+  ) {
 
-  if (!summary || !sections || !Array.isArray(sections)) {
     console.error('Invalid response format from OpenAI for summary.');
     throw new Error('Invalid response format from OpenAI for summary.');
   }
 
-  // Generate content for each section
+  return summaryData;
+}
+
+async function generateSectionContents(
+  projectName,
+  summary,
+  projectDetails,
+  sections
+) {
+
   const sectionContents = {};
   for (const section of sections) {
     console.log(`Generating content for section: ${section}`);
@@ -67,14 +111,51 @@ Project Details: ${projectDetails}`,
     sectionContents[section] = sectionContent;
   }
 
-  // Aggregate all sections into a JSON object
-  const documentContent = {
-    projectName,
-    summary,
-    sections: sectionContents,
-  };
-
-  return documentContent;
+  return sectionContents;
 }
 
-module.exports = { generateDocumentContent };
+async function updateSectionContent(
+  sectionName,
+  currentContent,
+  updateInstructions
+) {
+  console.log(`Updating content for section: ${sectionName}`);
+  const updateResponse = await openai.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    messages: [
+      {
+        role: 'system',
+        content:
+          'You are an AI assistant that helps update document sections based on user instructions.',
+      },
+      {
+        role: 'user',
+        content: `Please update the following section content based on the given instructions:
+
+Section Name: ${sectionName}
+
+Current Content:
+${currentContent}
+
+Update Instructions:
+${updateInstructions}
+
+Please provide the updated content for the section.`,
+      },
+    ],
+    temperature: 0.7,
+  });
+
+  console.log(
+    `Received response from OpenAI for section update: ${sectionName}`
+  );
+  const updatedContent = updateResponse.choices[0].message.content;
+  console.log(`Updated content for "${sectionName}":`, updatedContent);
+
+  return updatedContent;
+}
+
+module.exports = {
+  generateDocumentContent,
+  updateSectionContent,
+};

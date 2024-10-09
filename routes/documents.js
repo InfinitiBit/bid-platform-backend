@@ -8,10 +8,19 @@ const auth = require('../middleware/auth');
 const role = require('../middleware/role');
 const validate = require('../middleware/validation');
 const Document = require('../models/Document');
-const { generateDocumentContent } = require('../utils/documentGeneration');
+
 const {
   createSharePointFolder,
   uploadFileToSharePoint,
+  getFileFromSharePoint,
+} = require('../utils/sharepointOperations');
+const {
+  generateDocumentContent,
+  updateSectionContent,
+} = require('../utils/documentGeneration');
+const {
+  uploadToSharePoint,
+  getLatestVersion,
 } = require('../utils/sharepointOperations');
 
 // @route   POST /api/documents
@@ -31,36 +40,34 @@ router.post(
     try {
       console.log('Received request to create document:', projectName);
 
-      // Step 1: Generate document content using AI
+      // Generate document content
       const documentContent = await generateDocumentContent(
         projectName,
         projectDetails
       );
 
-      // Add console log to show document content
-      console.log(
-        'Generated document content:',
-        JSON.stringify(documentContent, null, 2)
-      );
-
-      // Step 2: Create a new Document instance
+      // Create a new Document instance
       const newDocument = new Document({
         name: projectName,
         creator: req.user.id,
         usedModel: 'gpt-3.5-turbo',
         currentStatus: 'draft',
+        versions: [], // Initialize the versions array
       });
 
-      // Step 3: Create a folder in SharePoint
-      const folderName = `${projectName}-${newDocument._id}`;
+      // Create a folder in SharePoint
+      const folderName = `${newDocument._id}`;
+      console.log(`Creating folder in SharePoint: ${folderName}`);
       await createSharePointFolder(folderName);
 
-      // Step 4: Upload the document to SharePoint
+      // Upload the document to SharePoint
       const fileName = `version-1.json`;
       const fileContent = JSON.stringify(documentContent, null, 2);
+      console.log(`Uploading file to SharePoint: ${fileName}`);
       await uploadFileToSharePoint(folderName, fileName, fileContent);
 
-      // Step 5: Update the document with version info and save to MongoDB
+      // Update the document with version info and save to MongoDB
+
       newDocument.versions.push({
         versionId: fileName,
         versionNumber: 1,
@@ -82,5 +89,73 @@ router.post(
     }
   }
 );
+
+// Updated route for updating a specific section
+router.post('/update-section', async (req, res) => {
+  console.log('Updating section...');
+  try {
+    const { documentId, sectionName, updateInstructions } = req.body;
+
+    // Fetch the document from MongoDB
+    const document = await Document.findById(documentId);
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+
+    console.log('Document found:', document);
+
+    // Get the latest version of the document
+    const latestVersion = document.versions[document.versions.length - 1];
+
+    // Fetch the document content from SharePoint
+    const folderName = `${document._id}`;
+    const fileName = latestVersion.versionId;
+    const fileContent = await getFileFromSharePoint(folderName, fileName);
+
+    // Parse the content
+    const documentContent = JSON.parse(fileContent);
+
+    // Update the section content
+    const currentContent = documentContent.sections[sectionName];
+    const updatedContent = await updateSectionContent(
+      sectionName,
+      currentContent,
+      updateInstructions
+    );
+
+    // Update the document content
+    documentContent.sections[sectionName] = updatedContent;
+
+    // Create a new version
+    const newVersionNumber = latestVersion.versionNumber + 1;
+    const newVersionId = `version-${newVersionNumber}.json`;
+
+    // Upload the updated document to SharePoint
+    const newFileContent = JSON.stringify(documentContent, null, 2);
+    await uploadFileToSharePoint(folderName, newVersionId, newFileContent);
+
+    // Update the document in MongoDB
+    const newVersion = {
+      versionId: newVersionId,
+      versionNumber: newVersionNumber,
+      content: documentContent,
+      lastModified: new Date(),
+    };
+    document.versions.push(newVersion);
+    document.lastModified = new Date();
+    await document.save();
+
+    res.json({
+      message: 'Section updated successfully',
+      updatedContent,
+      version: newVersionNumber,
+    });
+  } catch (error) {
+    console.error('Error updating section:', error);
+    res
+      .status(500)
+      .json({ message: 'Error updating section', error: error.message });
+  }
+});
 
 module.exports = router;
