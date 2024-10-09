@@ -140,10 +140,25 @@ async function updateFile(filePath, fileContent) {
   }
 }
 
+// Function to get the latest version of a file
+async function getLatestVersion(fileName) {
+  try {
+    const fileInfo = await spo.web
+      .getFileByServerRelativeUrl(`/Shared Documents/${fileName}`)
+      .select('UIVersionLabel')
+      .get();
+    return fileInfo.UIVersionLabel;
+  } catch (error) {
+    console.error('Error getting latest version:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   createSharePointFolder,
   uploadFileToSharePoint,
   getAllFilesAndFolders,
   deleteFileOrFolder,
   updateFile,
+  getLatestVersion,
 };

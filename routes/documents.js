@@ -12,7 +12,14 @@ const {
   createSharePointFolder,
   uploadFileToSharePoint,
 } = require('../utils/sharepointOperations');
-const { generateDocumentContent } = require('../utils/documentGeneration');
+const {
+  generateDocumentContent,
+  updateSectionContent,
+} = require('../utils/documentGeneration');
+const {
+  uploadToSharePoint,
+  getLatestVersion,
+} = require('../utils/sharepointOperations');
 
 // @route   POST /api/documents
 // @desc    Create a new document and upload to SharePoint
@@ -43,6 +50,7 @@ router.post(
         creator: req.user.id,
         usedModel: 'gpt-3.5-turbo',
         currentStatus: 'draft',
+        versions: [], // Initialize the versions array
       });
 
       // Create a folder in SharePoint
@@ -78,5 +86,58 @@ router.post(
     }
   }
 );
+
+// New route for updating a specific section
+router.post('/update-section', async (req, res) => {
+  console.log('Updating section...');
+  try {
+    const { projectId, sectionName, currentContent, updateInstructions } =
+      req.body;
+
+    // Fetch the document from the database
+    const document = await Document.findById(projectId);
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+
+    console.log('Document found XXX:', document);
+    // Update the section content
+    const updatedContent = await updateSectionContent(
+      sectionName,
+      currentContent,
+      updateInstructions
+    );
+
+    // Update the document content
+    document.content.sections[sectionName] = updatedContent;
+
+    // Save the updated document to the database
+    await document.save();
+
+    // Upload the updated document to SharePoint
+    const fileName = `${document.projectName}.docx`;
+    const fileContent = JSON.stringify(document.content);
+    const uploadResult = await uploadToSharePoint(fileName, fileContent);
+
+    // Get the latest version number
+    const latestVersion = await getLatestVersion(fileName);
+
+    // Update the document metadata
+    document.version = latestVersion;
+    document.lastModified = new Date();
+    await document.save();
+
+    res.json({
+      message: 'Section updated successfully',
+      updatedContent,
+      version: latestVersion,
+    });
+  } catch (error) {
+    console.error('Error updating section:', error);
+    res
+      .status(500)
+      .json({ message: 'Error updating section', error: error.message });
+  }
+});
 
 module.exports = router;

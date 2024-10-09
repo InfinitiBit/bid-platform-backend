@@ -112,6 +112,48 @@ Project Details: ${projectDetails}`,
   return sectionContents;
 }
 
+async function updateSectionContent(
+  sectionName,
+  currentContent,
+  updateInstructions
+) {
+  console.log(`Updating content for section: ${sectionName}`);
+  const updateResponse = await openai.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    messages: [
+      {
+        role: 'system',
+        content:
+          'You are an AI assistant that helps update document sections based on user instructions.',
+      },
+      {
+        role: 'user',
+        content: `Please update the following section content based on the given instructions:
+
+Section Name: ${sectionName}
+
+Current Content:
+${currentContent}
+
+Update Instructions:
+${updateInstructions}
+
+Please provide the updated content for the section.`,
+      },
+    ],
+    temperature: 0.7,
+  });
+
+  console.log(
+    `Received response from OpenAI for section update: ${sectionName}`
+  );
+  const updatedContent = updateResponse.choices[0].message.content;
+  console.log(`Updated content for "${sectionName}":`, updatedContent);
+
+  return updatedContent;
+}
+
 module.exports = {
   generateDocumentContent,
+  updateSectionContent,
 };
