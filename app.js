@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const documentsRouter = require('./routes/documents');
+const sharepointRoutes = require('./routes/sharepoint');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,7 @@ app.use('/api/protected', require('./routes/protected'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/documents', require('./routes/documents'));
 app.use('/api/docTest', require('./routes/docTest'));
+app.use('/api/sharepoint', sharepointRoutes); // Add this line
 // app.use('/api/testSharePoint', require('./testSharePoint'));
 // Start the server
 app.listen(PORT, () => {

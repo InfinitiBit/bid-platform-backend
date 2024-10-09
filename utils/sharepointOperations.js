@@ -67,7 +67,83 @@ async function uploadFileToSharePoint(folderName, fileName, fileContent) {
   }
 }
 
+// Function to get all files and folders in SharePoint
+async function getAllFilesAndFolders() {
+  if (!isValidJWT(ACCESS_TOKEN)) {
+    throw new Error('Invalid access token format');
+  }
+
+  const listUrl = `https://graph.microsoft.com/v1.0/sites/${SHAREPOINT_SITE_ID}/drive/root:/SharePointTest:/children`;
+
+  try {
+    const response = await axios.get(listUrl, {
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
+    });
+    return response.data.value;
+  } catch (error) {
+    console.error(
+      'Error listing files and folders in SharePoint:',
+      error.response ? error.response.data : error.message
+    );
+    throw new Error('Error listing files and folders in SharePoint');
+  }
+}
+
+// Function to delete a file or folder in SharePoint
+async function deleteFileOrFolder(itemPath) {
+  if (!isValidJWT(ACCESS_TOKEN)) {
+    throw new Error('Invalid access token format');
+  }
+
+  const deleteUrl = `https://graph.microsoft.com/v1.0/sites/${SHAREPOINT_SITE_ID}/drive/root:/SharePointTest/${itemPath}`;
+
+  try {
+    await axios.delete(deleteUrl, {
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
+    });
+    console.log(`Item "${itemPath}" deleted successfully from SharePoint.`);
+  } catch (error) {
+    console.error(
+      'Error deleting item from SharePoint:',
+      error.response ? error.response.data : error.message
+    );
+    throw new Error('Error deleting item from SharePoint');
+  }
+}
+
+// Function to update a file in SharePoint
+async function updateFile(filePath, fileContent) {
+  if (!isValidJWT(ACCESS_TOKEN)) {
+    throw new Error('Invalid access token format');
+  }
+
+  const updateUrl = `https://graph.microsoft.com/v1.0/sites/${SHAREPOINT_SITE_ID}/drive/root:/SharePointTest/${filePath}:/content`;
+
+  try {
+    await axios.put(updateUrl, fileContent, {
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log(`File "${filePath}" updated successfully in SharePoint.`);
+  } catch (error) {
+    console.error(
+      'Error updating file in SharePoint:',
+      error.response ? error.response.data : error.message
+    );
+    throw new Error('Error updating file in SharePoint');
+  }
+}
+
 module.exports = {
   createSharePointFolder,
   uploadFileToSharePoint,
+  getAllFilesAndFolders,
+  deleteFileOrFolder,
+  updateFile,
 };
