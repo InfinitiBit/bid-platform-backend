@@ -71,7 +71,6 @@ Project Details: ${projectDetails}`,
     !summaryData.sections ||
     !Array.isArray(summaryData.sections)
   ) {
-
     console.error('Invalid response format from OpenAI for summary.');
     throw new Error('Invalid response format from OpenAI for summary.');
   }
@@ -85,7 +84,6 @@ async function generateSectionContents(
   projectDetails,
   sections
 ) {
-
   const sectionContents = {};
   for (const section of sections) {
     console.log(`Generating content for section: ${section}`);
@@ -155,7 +153,42 @@ Please provide the updated content for the section.`,
   return updatedContent;
 }
 
+// Add a new function for creating document versions
+async function createDocumentVersion(documentId, content, userId) {
+  try {
+    const document = await Document.findById(documentId);
+    if (!document) {
+      throw new Error('Document not found');
+    }
+
+    const latestVersion = await DocumentVersion.findOne({
+      document: documentId,
+    })
+      .sort('-versionNumber')
+      .exec();
+
+    const newVersionNumber = latestVersion
+      ? latestVersion.versionNumber + 1
+      : 1;
+
+    const newVersion = new DocumentVersion({
+      document: documentId,
+      versionNumber: newVersionNumber,
+      content: content,
+      createdBy: userId,
+    });
+
+    await newVersion.save();
+    return newVersion;
+  } catch (error) {
+    console.error('Error creating document version:', error);
+    throw error;
+  }
+}
+
+// Export the new function
 module.exports = {
   generateDocumentContent,
   updateSectionContent,
+  createDocumentVersion,
 };

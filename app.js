@@ -7,11 +7,20 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const documentsRouter = require('./routes/documents');
 const sharepointRoutes = require('./routes/sharepoint');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
+
+// Configure CORS
+const corsOptions = {
+  origin: 'http://localhost:5173', // Allow only this origin
+  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+
+app.use(cors(corsOptions));
 
 // Connect to MongoDB
 connectDB();

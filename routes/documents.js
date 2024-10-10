@@ -158,4 +158,75 @@ router.post('/update-section', async (req, res) => {
   }
 });
 
+// Add a new route for submitting a document for review
+router.post(
+  '/:id/submit',
+  auth,
+  role(['Bid Creator', 'Admin']),
+  async (req, res) => {
+    try {
+      const document = await Document.findById(req.params.id);
+      if (!document) {
+        return res.status(404).json({ msg: 'Document not found' });
+      }
+
+      if (
+        document.creator.toString() !== req.user.id &&
+        req.user.role !== 'Admin'
+      ) {
+        return res.status(403).json({ msg: 'Not authorized' });
+      }
+
+      document.currentStatus = 'under review';
+      await document.save();
+
+      res.json({ msg: 'Document submitted for review', document });
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server error');
+    }
+  }
+);
+
+// Add a new route for reviewing a document
+router.post(
+  '/:id/review',
+  auth,
+  role(['Bid Reviewer', 'Admin']),
+  [
+    body('status').isIn(['approved', 'rejected']).withMessage('Invalid status'),
+    body('comments').optional().isString(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const document = await Document.findById(req.params.id);
+      if (!document) {
+        return res.status(404).json({ msg: 'Document not found' });
+      }
+
+      const review = new Review({
+        document: document._id,
+        reviewer: req.user.id,
+        status: req.body.status,
+        comments: req.body.comments,
+      });
+
+      await review.save();
+
+      document.currentStatus = req.body.status;
+      await document.save();
+
+      res.json({ msg: 'Document reviewed', review, document });
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server error');
+    }
+  }
+);
+
 module.exports = router;

@@ -15,14 +15,14 @@ const UserSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
   },
-  role: {
-    type: String,
-    enum: ['Admin', 'Bid Creator', 'Team Lead', 'Dep Head'],
-    default: 'Bid Creator',
-  },
   password: {
     type: String,
     required: true,
+  },
+  role: {
+    type: String,
+    enum: ['Admin', 'Bid Creator', 'Bid Reviewer', 'Bid Viewer', 'Client'],
+    default: 'Bid Viewer',
   },
   createdAt: {
     type: Date,

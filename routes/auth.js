@@ -1,7 +1,7 @@
 // routes/auth.js
 
 const express = require('express');
-const { body } = require('express-validator');
+const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -15,17 +15,23 @@ const router = express.Router();
 // @access  Public
 router.post(
   '/register',
-  validate([
+  [
     body('name', 'Name is required').notEmpty(),
     body('email', 'Please include a valid email').isEmail(),
     body('password', 'Password must be at least 6 characters').isLength({
       min: 6,
     }),
     body('role')
-      .optional()
-      .isIn(['Admin', 'Bid Creator', 'Team Lead', 'Dep Head']),
-  ]),
+      .isIn(['Admin', 'Bid Creator', 'Bid Reviewer', 'Bid Viewer', 'Client'])
+      .withMessage('Invalid role'),
+  ],
   async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { name, email, password, role } = req.body;
 
     try {
@@ -42,7 +48,7 @@ router.post(
         name,
         email,
         password,
-        role: role || 'Bid Creator',
+        role,
       });
 
       // Hash the password
@@ -52,9 +58,23 @@ router.post(
       // Save the user to the database
       await user.save();
 
-      // Optionally, generate a JWT token (to be implemented in login task)
+      // Generate JWT token
+      const payload = {
+        user: {
+          id: user.id,
+          role: user.role,
+        },
+      };
 
-      res.status(201).json({ msg: 'User registered successfully' });
+      jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        { expiresIn: '365d' },
+        (err, token) => {
+          if (err) throw err;
+          res.json({ token });
+        }
+      );
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server error');
