@@ -9,8 +9,8 @@ const role = require('../middleware/role');
 const validate = require('../middleware/validation');
 const Document = require('../models/Document');
 const Approval = require('../models/Approval');
-const Notification = require('../models/Notification');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 const {
   createSharePointFolder,
@@ -338,67 +338,43 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// @route   GET /api/documents/notifications
-// @desc    Get all notifications for the authenticated user
+// @route   GET /api/documents/:id
+// @desc    Get a single document by ID
 // @access  Private (All authenticated users)
-router.get('/notifications', auth, async (req, res) => {
-  console.log('Fetching notifications for user:', req.user.id);
+router.get('/:id', auth, async (req, res) => {
+  console.log('Fetching document for:', req.params.id);
   try {
-    const notifications = await Notification.find({ user: req.user.id })
-      .sort({ createdAt: -1 })
-      .populate('document', 'name')
-      .populate('user', 'name');
+    const documentId = req.params.id;
 
-    res.json(notifications);
-  } catch (err) {
-    console.error('Error fetching notifications:', err.message);
-    res.status(500).send('Server error');
-  }
-});
+    // Fetch the document from the database
+    const document = await Document.findById(documentId).select('-__v');
 
-// @route   PUT /api/documents/notifications/:id
-// @desc    Mark a notification as read
-// @access  Private (All authenticated users)
-router.put('/notifications/:id', auth, async (req, res) => {
-  try {
-    const notification = await Notification.findOne({
-      _id: req.params.id,
-      user: req.user.id,
-    });
-
-    if (!notification) {
-      return res.status(404).json({ msg: 'Notification not found' });
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' });
     }
 
-    notification.read = true;
-    await notification.save();
+    // Get the latest version
+    const latestVersion = document.versions[document.versions.length - 1];
 
-    res.json(notification);
+    // Prepare the response object
+    const response = {
+      ...document.toObject(),
+      latestVersion: {
+        versionId: latestVersion.versionId,
+        versionNumber: latestVersion.versionNumber,
+        lastModified: latestVersion.lastModified,
+        content: latestVersion.content,
+      },
+      versions: document.versions.map((v) => ({
+        versionId: v.versionId,
+        versionNumber: v.versionNumber,
+        lastModified: v.lastModified,
+      })),
+    };
+
+    res.json(response);
   } catch (err) {
-    console.error('Error updating notification:', err.message);
-    res.status(500).send('Server error');
-  }
-});
-
-// @route   DELETE /api/documents/notifications/:id
-// @desc    Delete a notification
-// @access  Private (All authenticated users)
-router.delete('/notifications/:id', auth, async (req, res) => {
-  try {
-    const notification = await Notification.findOne({
-      _id: req.params.id,
-      user: req.user.id,
-    });
-
-    if (!notification) {
-      return res.status(404).json({ msg: 'Notification not found' });
-    }
-
-    await notification.remove();
-
-    res.json({ msg: 'Notification removed' });
-  } catch (err) {
-    console.error('Error deleting notification:', err.message);
+    console.error('Error fetching document:', err.message);
     res.status(500).send('Server error');
   }
 });
