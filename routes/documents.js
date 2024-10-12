@@ -3,7 +3,7 @@
 require('dotenv').config();
 const express = require('express');
 const router = express.Router();
-const { body } = require('express-validator');
+const { body, validationResult } = require('express-validator');
 const auth = require('../middleware/auth');
 const role = require('../middleware/role');
 const validate = require('../middleware/validation');
@@ -228,5 +228,40 @@ router.post(
     }
   }
 );
+
+// @route   GET /api/documents
+// @desc    Get all documents
+// @access  Private (All authenticated users)
+router.get('/', auth, async (req, res) => {
+  try {
+    // Fetch all documents from the database
+    const documents = await Document.aggregate([
+      {
+        $addFields: {
+          latestVersion: { $arrayElemAt: ['$versions', -1] },
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          creator: 1,
+          usedModel: 1,
+          currentStatus: 1,
+          lastModified: 1,
+          'versions.versionId': 1,
+          'versions.versionNumber': 1,
+          'versions.lastModified': 1,
+          'latestVersion.content': 1,
+        },
+      },
+      { $sort: { lastModified: -1 } },
+    ]);
+
+    res.json(documents);
+  } catch (err) {
+    console.error('Error fetching documents:', err.message);
+    res.status(500).send('Server error');
+  }
+});
 
 module.exports = router;
