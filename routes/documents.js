@@ -8,6 +8,9 @@ const auth = require('../middleware/auth');
 const role = require('../middleware/role');
 const validate = require('../middleware/validation');
 const Document = require('../models/Document');
+const Approval = require('../models/Approval');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 const {
   createSharePointFolder,
@@ -67,7 +70,6 @@ router.post(
       await uploadFileToSharePoint(folderName, fileName, fileContent);
 
       // Update the document with version info and save to MongoDB
-
       newDocument.versions.push({
         versionId: fileName,
         versionNumber: 1,
@@ -77,6 +79,24 @@ router.post(
 
       await newDocument.save();
       console.log('Document saved to MongoDB.');
+
+      // Create an approval entry
+      const approval = new Approval({
+        document: newDocument._id,
+        status: 'draft',
+      });
+      await approval.save();
+
+      // Fetch all users
+      const allUsers = await User.find();
+
+      // Create notifications for all users
+      const notifications = allUsers.map((user) => ({
+        user: user._id,
+        document: newDocument._id,
+        text: `A new document "${newDocument.name}" has been created by ${req.user.name}.`,
+      }));
+      await Notification.insertMany(notifications);
 
       // Respond with success message
       res.status(201).json({
@@ -177,10 +197,30 @@ router.post(
         return res.status(403).json({ msg: 'Not authorized' });
       }
 
-      document.currentStatus = 'under review';
+      document.currentStatus = 'submitted';
       await document.save();
 
-      res.json({ msg: 'Document submitted for review', document });
+      // Update the approval status
+      const approval = await Approval.findOneAndUpdate(
+        { document: document._id },
+        { status: 'pending' },
+        { new: true }
+      );
+
+      if (!approval) {
+        return res.status(404).json({ msg: 'Approval not found' });
+      }
+
+      // Create notifications for all Bid Reviewers
+      const reviewers = await User.find({ role: 'Bid Reviewer' });
+      const notifications = reviewers.map((reviewer) => ({
+        user: reviewer._id,
+        document: document._id,
+        text: `A new document "${document.name}" is ready for review.`,
+      }));
+      await Notification.insertMany(notifications);
+
+      res.json({ msg: 'Document submitted for review', document, approval });
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server error');
@@ -209,19 +249,53 @@ router.post(
         return res.status(404).json({ msg: 'Document not found' });
       }
 
-      const review = new Review({
-        document: document._id,
-        reviewer: req.user.id,
-        status: req.body.status,
-        comments: req.body.comments,
-      });
+      // Update the approval status
+      const approval = await Approval.findOne({ document: document._id });
 
-      await review.save();
+      if (!approval) {
+        return res.status(404).json({ msg: 'Approval not found' });
+      }
 
-      document.currentStatus = req.body.status;
+      // Check if the reviewer has already reviewed
+      if (approval.approvers && approval.approvers.includes(req.user.id)) {
+        return res
+          .status(400)
+          .json({ msg: 'You have already reviewed this document' });
+      }
+
+      // Add the reviewer to the approvers list
+      if (!approval.approvers) {
+        approval.approvers = [];
+      }
+      approval.approvers.push(req.user.id);
+
+      // Update approval status based on the number of approvers
+      if (approval.approvers.length >= 2 && req.body.status === 'approved') {
+        approval.status = 'approved';
+        document.currentStatus = 'approved';
+      } else if (req.body.status === 'rejected') {
+        approval.status = 'rejected';
+        document.currentStatus = 'rejected';
+      } else {
+        approval.status = 'in_progress';
+        document.currentStatus = 'in_progress';
+      }
+
+      approval.comments = req.body.comments;
+      approval.updatedAt = Date.now();
+
+      await approval.save();
       await document.save();
 
-      res.json({ msg: 'Document reviewed', review, document });
+      // Create a notification for the document creator
+      const notification = new Notification({
+        user: document.creator,
+        document: document._id,
+        text: `Your document "${document.name}" has been ${approval.status}.`,
+      });
+      await notification.save();
+
+      res.json({ msg: 'Document reviewed', approval, document });
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server error');
@@ -260,6 +334,71 @@ router.get('/', auth, async (req, res) => {
     res.json(documents);
   } catch (err) {
     console.error('Error fetching documents:', err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   GET /api/documents/notifications
+// @desc    Get all notifications for the authenticated user
+// @access  Private (All authenticated users)
+router.get('/notifications', auth, async (req, res) => {
+  console.log('Fetching notifications for user:', req.user.id);
+  try {
+    const notifications = await Notification.find({ user: req.user.id })
+      .sort({ createdAt: -1 })
+      .populate('document', 'name')
+      .populate('user', 'name');
+
+    res.json(notifications);
+  } catch (err) {
+    console.error('Error fetching notifications:', err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   PUT /api/documents/notifications/:id
+// @desc    Mark a notification as read
+// @access  Private (All authenticated users)
+router.put('/notifications/:id', auth, async (req, res) => {
+  try {
+    const notification = await Notification.findOne({
+      _id: req.params.id,
+      user: req.user.id,
+    });
+
+    if (!notification) {
+      return res.status(404).json({ msg: 'Notification not found' });
+    }
+
+    notification.read = true;
+    await notification.save();
+
+    res.json(notification);
+  } catch (err) {
+    console.error('Error updating notification:', err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   DELETE /api/documents/notifications/:id
+// @desc    Delete a notification
+// @access  Private (All authenticated users)
+router.delete('/notifications/:id', auth, async (req, res) => {
+  try {
+    const notification = await Notification.findOne({
+      _id: req.params.id,
+      user: req.user.id,
+    });
+
+    if (!notification) {
+      return res.status(404).json({ msg: 'Notification not found' });
+    }
+
+    await notification.remove();
+
+    res.json({ msg: 'Notification removed' });
+  } catch (err) {
+    console.error('Error deleting notification:', err.message);
     res.status(500).send('Server error');
   }
 });
