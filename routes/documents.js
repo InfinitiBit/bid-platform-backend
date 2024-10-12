@@ -110,10 +110,10 @@ router.post('/update-section', async (req, res) => {
     // Fetch the document content from SharePoint
     const folderName = `${document._id}`;
     const fileName = latestVersion.versionId;
-    const fileContent = await getFileFromSharePoint(folderName, fileName);
+    console.log(`Fetching file from SharePoint: ${folderName}/${fileName}`);
+    const documentContent = await getFileFromSharePoint(folderName, fileName);
 
-    // Parse the content
-    const documentContent = JSON.parse(fileContent);
+    console.log('Document content retrieved:', documentContent);
 
     // Update the section content
     const currentContent = documentContent.sections[sectionName];

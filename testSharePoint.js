@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const { getSharePointToken } = require('./utils/sharepointAuth');
 require('dotenv').config();
 const app = express();
 app.use(express.json());
@@ -8,7 +9,7 @@ app.use(express.json());
 const SHAREPOINT_SITE_URL =
   'https://infinitibit.sharepoint.com/sites/global/SharePointTest/';
 const SHAREPOINT_SITE_ID = process.env.SHAREPOINT_SITE_ID;
-const ACCESS_TOKEN = process.env.ACCESS_TOKEN; // You'll store your access token here
+const ACCESS_TOKEN = await getSharePointToken();
 
 // Add this function to validate the access token format
 function isValidJWT(token) {

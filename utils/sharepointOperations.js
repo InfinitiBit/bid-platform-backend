@@ -1,17 +1,18 @@
 const axios = require('axios');
+const { getSharePointToken } = require('./sharepointAuth');
 
 // Configuration variables for SharePoint
 const SHAREPOINT_SITE_ID = process.env.SHAREPOINT_SITE_ID;
-const ACCESS_TOKEN = process.env.ACCESS_TOKEN; // Ensure this is securely stored and refreshed as needed
 
 // Function to validate the access token format
-
 function isValidJWT(token) {
   return token && token.split('.').length === 3;
 }
 
 // Function to create a folder in SharePoint
 async function createSharePointFolder(folderName) {
+  const ACCESS_TOKEN = await getSharePointToken();
+
   if (!isValidJWT(ACCESS_TOKEN)) {
     throw new Error('Invalid access token format');
   }
@@ -20,7 +21,6 @@ async function createSharePointFolder(folderName) {
 
   try {
     await axios.post(
-
       folderCreationUrl,
       {
         name: folderName,
@@ -46,6 +46,8 @@ async function createSharePointFolder(folderName) {
 
 // Function to upload a file to SharePoint
 async function uploadFileToSharePoint(folderName, fileName, fileContent) {
+  const ACCESS_TOKEN = await getSharePointToken();
+
   if (!isValidJWT(ACCESS_TOKEN)) {
     throw new Error('Invalid access token format');
   }
@@ -54,7 +56,6 @@ async function uploadFileToSharePoint(folderName, fileName, fileContent) {
 
   try {
     await axios.put(uploadUrl, fileContent, {
-
       headers: {
         Authorization: `Bearer ${ACCESS_TOKEN}`,
         'Content-Type': 'application/json',
@@ -72,6 +73,8 @@ async function uploadFileToSharePoint(folderName, fileName, fileContent) {
 
 // Function to get all files and folders in SharePoint
 async function getAllFilesAndFolders() {
+  const ACCESS_TOKEN = await getSharePointToken();
+
   if (!isValidJWT(ACCESS_TOKEN)) {
     throw new Error('Invalid access token format');
   }
@@ -96,6 +99,8 @@ async function getAllFilesAndFolders() {
 
 // Function to delete a file or folder in SharePoint
 async function deleteFileOrFolder(itemPath) {
+  const ACCESS_TOKEN = await getSharePointToken();
+
   if (!isValidJWT(ACCESS_TOKEN)) {
     throw new Error('Invalid access token format');
   }
@@ -120,6 +125,8 @@ async function deleteFileOrFolder(itemPath) {
 
 // Function to update a file in SharePoint
 async function updateFile(filePath, fileContent) {
+  const ACCESS_TOKEN = await getSharePointToken();
+
   if (!isValidJWT(ACCESS_TOKEN)) {
     throw new Error('Invalid access token format');
   }
@@ -159,6 +166,8 @@ async function getLatestVersion(fileName) {
 
 // Function to get a file from SharePoint
 async function getFileFromSharePoint(folderName, fileName) {
+  const ACCESS_TOKEN = await getSharePointToken();
+
   if (!isValidJWT(ACCESS_TOKEN)) {
     throw new Error('Invalid access token format');
   }
@@ -173,9 +182,28 @@ async function getFileFromSharePoint(folderName, fileName) {
       headers: {
         Authorization: `Bearer ${ACCESS_TOKEN}`,
       },
-      responseType: 'text',
+      responseType: 'json', // Change this to 'json'
     });
-    return response.data;
+    const content = response.data;
+    console.log('Content from SharePoint:', content);
+
+    // If the content is already an object, return it directly
+    if (typeof content === 'object' && content !== null) {
+      return content;
+    }
+
+    // If it's a string, try to parse it as JSON
+    if (typeof content === 'string') {
+      try {
+        return JSON.parse(content);
+      } catch (parseError) {
+        console.error('Error parsing content as JSON:', parseError);
+        throw new Error('Invalid JSON content');
+      }
+    }
+
+    // If it's neither an object nor a string, throw an error
+    throw new Error('Unexpected content type');
   } catch (error) {
     console.error(
       'Error getting file from SharePoint:',
