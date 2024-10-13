@@ -1,6 +1,6 @@
 const OpenAI = require('openai');
 const promptSamples = require('./promptSamples.json');
-
+const { AI_MODELS } = require('./aiModels');
 // Initialize OpenAI API
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -67,7 +67,7 @@ Please generate content for the "${sectionName}" section based on the above info
 `;
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
+    model: AI_MODELS.gpt4o,
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.7,
   });
@@ -110,7 +110,7 @@ async function updateSectionContent(
 ) {
   console.log(`Updating content for section: ${sectionName}`);
   const updateResponse = await openai.chat.completions.create({
-    model: 'gpt-4o',
+    model: AI_MODELS.gpt4o,
     messages: [
       {
         role: 'system',

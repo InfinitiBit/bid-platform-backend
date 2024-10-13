@@ -11,6 +11,7 @@ const Document = require('../models/Document');
 const Approval = require('../models/Approval');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
+const { AI_MODELS } = require('../utils/aiModels');
 
 const {
   createSharePointFolder,
@@ -53,7 +54,7 @@ router.post(
       const newDocument = new Document({
         name: projectName,
         creator: req.user.id,
-        usedModel: 'gpt-3.5-turbo',
+        usedModel: AI_MODELS.gpt4o,
         currentStatus: 'draft',
         versions: [], // Initialize the versions array
       });

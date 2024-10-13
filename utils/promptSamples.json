@@ -7,7 +7,7 @@
       "Proposed Solution": "Briefly describe the solution being proposed, ensuring it aligns with the project goals.",
       "Value Proposition": "Highlight how the proposed solution will meet or exceed the client's needs and expectations, focusing on benefits such as efficiency, innovation, quality, and client satisfaction."
     },
-    "Output Format": "The introduction should be a well-structured paragraph, utilizing clear and professional language. It should be concise."
+    "Output Format": "The introduction should be a well-structured markdown document format utilizing clear and professional language. Do not add the section title to the content. It should be concise."
   },
   "Company Overview": {
     "Detailed Prompt": "Generate a comprehensive company overview for [Company Name] that includes essential details such as the company’s background, mission, vision, and areas of expertise. Focus on [specific industry or technology] and highlight any major achievements or relevant experience that would be important to the client.",
@@ -19,7 +19,7 @@
       "Major Achievements": "Include any significant accomplishments, such as awards, certifications, successful projects, or partnerships, that demonstrate the company’s ability to deliver value and innovation.",
       "Relevant Experience": "Summarize any experience directly related to the client’s needs, underscoring past successes in similar industries or with comparable technologies."
     },
-    "Output Format": "The overview should be well-structured, professional, and concise, written as a single cohesive narrative that positions the company as an industry leader."
+    "Output Format": "The overview should be well-structured, professional, and concise, written as a single cohesive narrative that positions the company as an industry leader. Use markdown format. Do not add the section title to the content."
   },
   "Project Understanding and Objectives": {
     "Detailed Prompt": "Generate a thorough explanation of our understanding of [Project Name], as outlined in the RFP. This should include how we plan to address the client’s objectives, identifying specific challenges mentioned in the RFP, and describing how our solution will overcome these challenges.",
@@ -31,7 +31,7 @@
       "Challenge Mitigation": "For each challenge identified, explain how the proposed solution will overcome it. Focus on the practicality, innovation, or technical prowess of your approach in solving these specific problems.",
       "Benefits to Client": "Highlight the key benefits the client will experience from this solution, such as increased efficiency, cost-effectiveness, or a better user experience."
     },
-    "Output Format": "The explanation should be a detailed, professionally written narrative, breaking down the project understanding, objectives, challenges, and solutions."
+    "Output Format": "The explanation should be a detailed, professionally written narrative, breaking down the project understanding, objectives, challenges, and solutions. Use markdown format. Do not add the section title to the content."
   },
   "Proposed Solution": {
     "Detailed Prompt": "Outline a comprehensive proposed solution for [Project Name] as described in the RFP, focusing on the technical aspects, tools, and technologies (e.g., [ReactJS, NodeJS, AI Integration]) that will be employed to ensure the project’s success. Include key features such as [security, scalability, user management, collaboration features].",
@@ -55,7 +55,7 @@
       },
       "Methodologies": "Describe the development methodologies to be employed (e.g., Agile, Scrum, DevOps), emphasizing how they will ensure efficient project execution, collaboration, and iterative improvement."
     },
-    "Output Format": "The outline should be presented as a structured narrative, highlighting each phase of the project and clearly articulating how the proposed technologies and methodologies will lead to a successful outcome."
+    "Output Format": "The outline should be presented as a structured narrative, highlighting each phase of the project and clearly articulating how the proposed technologies and methodologies will lead to a successful outcome. Use markdown format. Do not add the section title to the content."
   },
   "Project Workstreams and Timeline": {
     "Detailed Prompt": "Generate a comprehensive explanation of our understanding of [Project Name] as described in the RFP. This explanation should include a breakdown of the client’s objectives, specific challenges mentioned in the RFP, and how our proposed solution will overcome these challenges to ensure project success.",
@@ -67,7 +67,7 @@
       "Challenge Mitigation": "For each challenge mentioned, explain the strategies or technical approaches that will be implemented to overcome them.",
       "Value to the Client": "Illustrate the value that the proposed solution brings to the client, such as increased productivity, cost savings, or enhanced user satisfaction."
     },
-    "Output Format": "The explanation should be a detailed, professional narrative that demonstrates a deep understanding of the project and the client’s needs."
+    "Output Format": "The explanation should be a detailed, professional narrative that demonstrates a deep understanding of the project and the client’s needs. Use markdown format. Do not add the section title to the content."
   },
   "Team Compositions and Qualification": {
     "Detailed Prompt": "Describe the project team for [Project Name], outlining key roles such as [Tech Lead, Backend Developer, UI/UX Designer, etc.]. Provide details on each team member’s qualifications, experience, and expertise in similar projects.",
@@ -84,7 +84,7 @@
       "Qualifications and Experience": "For each team member, list relevant certifications, educational background, and specific projects they’ve worked on that demonstrate their suitability for this project.",
       "Alignment with Project Needs": "Explain how the combined skills of the team directly align with the project’s objectives."
     },
-    "Output Format": "The description should be a structured, professional narrative that introduces the team and their qualifications."
+    "Output Format": "The description should be a structured, professional narrative that introduces the team and their qualifications. Use markdown format. Do not add the section title to the content."
   },
   "Development Approach & Methodology": {
     "Detailed Prompt": "Generate a detailed description of the development approach for [Project Name], focusing on the chosen methodology (e.g., Agile, Scrum).",
@@ -99,7 +99,7 @@
       "Continuous Communication with Stakeholders": "Detail the mechanisms in place for continuous communication with stakeholders, such as sprint reviews, demo sessions, and frequent check-ins.",
       "Risk Mitigation and Quality Assurance": "Mention how the chosen methodology includes regular testing and feedback loops to mitigate risks and ensure that quality is maintained throughout development."
     },
-    "Output Format": "The description should be a clear, structured narrative that explains the development approach in detail."
+    "Output Format": "The description should be a clear, structured narrative that explains the development approach in detail. Use markdown format. Do not add the section title to the content."
   },
   "Technology Stack": {
     "Detailed Prompt": "Generate a detailed description of the technology stack for [Project Name], highlighting the tools and technologies that will be used for both frontend and backend development, as well as databases and other essential tools or integrations.",
@@ -125,7 +125,7 @@
         "Authentication and Security": "Mention tools for implementing authentication and explain how security concerns such as data encryption and authentication will be handled."
       }
     },
-    "Output Format": "The description should be a structured and professional narrative that covers each technology, explaining how it will be used and why it’s essential for the project."
+    "Output Format": "The description should be a structured and professional narrative that covers each technology, explaining how it will be used and why it’s essential for the project. Use markdown format. Do not add the section title to the content."
   },
   "Quality Assurance & Testing": {
     "Detailed Prompt": "Generate a detailed description of the quality assurance (QA) and testing strategies for [Project Name].",
@@ -160,7 +160,7 @@
       },
       "Bug Tracking and Resolution": "Discuss how issues identified during testing will be tracked using tools like Jira or Trello."
     },
-    "Output Format": "The description should be structured and professional, breaking down each QA and testing strategy clearly."
+    "Output Format": "The description should be structured and professional, breaking down each QA and testing strategy clearly. Use markdown format. Do not add the section title to the content."
   },
   "Risk Management": {
     "Detailed Prompt": "Generate a comprehensive risk management plan for [Project Name], identifying potential risks such as [technical integration issues, project delays, security breaches], and propose mitigation strategies for each risk. The plan should cover potential risks, their likelihood and impact, and detailed strategies to minimize or avoid these risks.",
