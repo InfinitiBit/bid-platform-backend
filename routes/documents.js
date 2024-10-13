@@ -234,7 +234,9 @@ router.post(
   auth,
   role(['Bid Reviewer', 'Admin']),
   [
-    body('status').isIn(['approved', 'rejected']).withMessage('Invalid status'),
+    body('status')
+      .isIn(['approved', 'rejected', 'review'])
+      .withMessage('Invalid status'),
     body('comments').optional().isString(),
   ],
   async (req, res) => {

@@ -21,7 +21,14 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['Admin', 'Bid Creator', 'Bid Reviewer', 'Bid Viewer', 'Client'],
+    enum: [
+      'Admin',
+      'Bid Creator',
+      'Bid Reviewer',
+      'Bid Viewer',
+      'Manager',
+      'Client',
+    ],
     default: 'Bid Viewer',
   },
   createdAt: {

@@ -14,7 +14,14 @@ const DocumentSchema = new mongoose.Schema({
   },
   currentStatus: {
     type: String,
-    enum: ['draft', 'under review', 'approved', 'rejected'],
+    enum: [
+      'draft',
+      'submitted',
+      'in_progress',
+      'under review',
+      'approved',
+      'rejected',
+    ],
     default: 'draft',
   },
   createdAt: {
