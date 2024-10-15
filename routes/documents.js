@@ -382,4 +382,60 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
+// @route   POST /api/documents/update-document
+// @desc    Update an entire document
+// @access  Private (Bid Creator and Admin)
+router.post(
+  '/update-document',
+  auth,
+  role(['Admin', 'Bid Creator']),
+  async (req, res) => {
+    console.log('Updating document...');
+    try {
+      const { documentId, updatedContent } = req.body;
+
+      // Fetch the document from MongoDB
+      const document = await Document.findById(documentId);
+      if (!document) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+
+      console.log('Document found:', document);
+
+      // Get the latest version of the document
+      const latestVersion = document.versions[document.versions.length - 1];
+
+      // Create a new version
+      const newVersionNumber = latestVersion.versionNumber + 1;
+      const newVersionId = `version-${newVersionNumber}.json`;
+
+      // Upload the updated document to SharePoint
+      const folderName = `${document._id}`;
+      const newFileContent = JSON.stringify(updatedContent, null, 2);
+      await uploadFileToSharePoint(folderName, newVersionId, newFileContent);
+
+      // Update the document in MongoDB
+      const newVersion = {
+        versionId: newVersionId,
+        versionNumber: newVersionNumber,
+        content: updatedContent,
+        lastModified: new Date(),
+      };
+      document.versions.push(newVersion);
+      document.lastModified = new Date();
+      await document.save();
+
+      res.json({
+        message: 'Document updated successfully',
+        version: newVersionNumber,
+      });
+    } catch (error) {
+      console.error('Error updating document:', error);
+      res
+        .status(500)
+        .json({ message: 'Error updating document', error: error.message });
+    }
+  }
+);
+
 module.exports = router;

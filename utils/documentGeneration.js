@@ -6,6 +6,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const aiModel = AI_MODELS.gpt35Turbo;
 async function generateDocumentContent(projectName, projectDetails) {
   console.log('Generating document content for project:', projectName);
 
@@ -52,8 +53,16 @@ async function generateSectionContent(
   sectionName,
   sectionData
 ) {
-  const { 'Detailed Prompt': detailedPrompt, Steps: steps } = sectionData;
+  const {
+    'Detailed Prompt': detailedPrompt,
+    Steps: steps,
+    OutputFormat: outputFormat,
+  } = sectionData;
 
+  console.log('Detailed Prompt:', detailedPrompt);
+  console.log('Steps:', steps);
+  console.log('OutputFormat:', outputFormat);
+  // console.log('SectionData:', sectionData);
   const prompt = `
 Project Name: ${projectName}
 Project Details: ${projectDetails}
@@ -63,15 +72,15 @@ ${detailedPrompt}
 Steps:
 ${JSON.stringify(steps, null, 2)}
 
-Please generate content for the "${sectionName}" section based on the above information and steps.
+Please generate content for the "${sectionName}" section based on the above information and steps. Follow the output format: ${outputFormat}
 `;
 
   const response = await openai.chat.completions.create({
-    model: AI_MODELS.gpt4o,
+    model: aiModel,
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.7,
   });
-
+  // console.log('Prompt: ', prompt);
   console.log(`Received response from OpenAI for section: ${sectionName}`);
   const content = response.choices[0].message.content;
 
@@ -110,7 +119,7 @@ async function updateSectionContent(
 ) {
   console.log(`Updating content for section: ${sectionName}`);
   const updateResponse = await openai.chat.completions.create({
-    model: AI_MODELS.gpt4o,
+    model: aiModel,
     messages: [
       {
         role: 'system',
