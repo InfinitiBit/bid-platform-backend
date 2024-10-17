@@ -6,7 +6,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const aiModel = AI_MODELS.gpt35Turbo;
+const aiModel = AI_MODELS.gpt4o;
 async function generateDocumentContent(projectName, projectDetails) {
   console.log('Generating document content for project:', projectName);
 

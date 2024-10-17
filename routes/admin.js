@@ -40,7 +40,8 @@ router.get('/users', requireAdmin, async (req, res) => {
 // @route   GET /api/users/:id
 // @desc    Get user by ID
 // @access  Private (Admin only)
-router.get('/users/:id', requireAdmin, async (req, res) => {
+router.get('/users/:id', async (req, res) => {
+  console.log('Getting user by ID:', req.params.id);
   try {
     const user = await User.findById(req.params.id).select('-password'); // Exclude password
     if (!user) {
