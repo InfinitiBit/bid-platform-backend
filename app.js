@@ -10,6 +10,7 @@ const sharepointRoutes = require('./routes/sharepoint');
 const cors = require('cors');
 const { initializeTokenRefresh } = require('./utils/sharepointAuth');
 const notificationsRoutes = require('./routes/notifications');
+const documentFromRFQRouter = require('./routes/documentFromRFQ');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +45,7 @@ app.use('/api/documents', require('./routes/documents'));
 app.use('/api/docTest', require('./routes/docTest'));
 app.use('/api/sharepoint', sharepointRoutes); // Add this line
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api', documentFromRFQRouter);
 // app.use('/api/testSharePoint', require('./testSharePoint'));
 
 // Check for required environment variables
